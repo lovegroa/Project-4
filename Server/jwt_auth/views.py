@@ -1,13 +1,16 @@
-from sys import api_version
+from functools import partial
 from rest_framework.views import APIView
 from django.contrib.auth import get_user_model
 from rest_framework import status
 from rest_framework.response import Response
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import PermissionDenied, NotFound
 from .serializers.common import UserSerializer
 from datetime import datetime, timedelta
 import jwt
 from django.conf import settings
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from inspect import currentframe, getframeinfo
+
 
 # Create your views here.
 
@@ -15,7 +18,9 @@ User = get_user_model()
 
 class RegisterView(APIView):
     def post(self, request):
+        request.data['username'] = request.data['email'] 
         user_to_create = UserSerializer(data=request.data)
+
         try:
             user_to_create.is_valid()
             user_to_create.save()
@@ -66,5 +71,40 @@ class VerifyEmail(APIView):
             }, status=status.HTTP_200_OK)
         except:
             raise Response(status=status.HTTP_400_BAD_REQUEST)
+
+class GetProfile(APIView):
+    permission_classes = (IsAuthenticatedOrReadOnly, )
+
+    def get_profile(self, pk):
+        try:
+            return User.objects.get(pk=pk)
+        except User.DoesNotExist:
+            raise NotFound(detail="User not found")
+
+    def get(self, request):
+        print(request.data['userID'])
+        profile = self.get_profile(pk=request.data['userID'])
+        serialized_user = UserSerializer(profile)
+        return Response(serialized_user.data, status=status.HTTP_200_OK)
+
+    def put(self, request):
+
+        profile = self.get_profile(pk=request.data['userID'])
+        serialized_user = UserSerializer(profile, data=request.data, partial=True)
+        print(
+        '\033[94m',
+        'it made it here',
+        'line ', getframeinfo(currentframe()).lineno, 
+        'within the file',
+        getframeinfo(currentframe()).filename.replace('/Users/alexlovegrovee/Documents/projects/sei-project-four/Server/', ''),
+        '\033[0m')
+        try:
+            serialized_user.is_valid()
+            serialized_user.save()
+            return Response(serialized_user.data, status=status.HTTP_202_ACCEPTED)
+        except AssertionError as error:
+            return Response({ "detail": str(error) }, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+        except:
+            return Response("Unprocessable Entity", status=status.HTTP_422_UNPROCESSABLE_ENTITY)      
 
 

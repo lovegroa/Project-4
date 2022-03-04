@@ -9,4 +9,4 @@ class User(AbstractUser):
     profile_image = models.CharField(max_length=300) # add new field
 
     def __str__(self):
-        return f"{self.first_name} {self.last_name} "
+        return f"User: {self.first_name} {self.last_name}"
