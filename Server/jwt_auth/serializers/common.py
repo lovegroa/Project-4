@@ -12,8 +12,6 @@ class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
     password_confirmation = serializers.CharField(write_only=True)
 
-    print('it made it here line', getframeinfo(currentframe()).lineno)
-
     def validate(self, data):
         if data.get('password'):
             password = data.pop('password')
