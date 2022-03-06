@@ -1,16 +1,39 @@
-import React, { useEffect } from 'react'
-import axios from 'axios'
+import React, { useState } from 'react'
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import Login from './components/elements/Login'
+import Home from './components/pages/Home'
+import { userAuthenticated } from './components/utils/UserAuthenticated'
 
 function App() {
-  useEffect(() => {
-    const getData = async () => {
-      const { data } = await axios.get('/api/products/') // * <-- replace with your endpoint
-      console.log(data)
-    }
-    getData()
-  })
+    const [userAuthenticatedState, setUserAuthenticatedState] = useState(
+        userAuthenticated()
+    )
 
-  return <h1>Hello World</h1>
+    return (
+        <>
+            <BrowserRouter>
+                <Routes>
+                    {userAuthenticatedState ? (
+                        <Route path='/' element={<Home />} />
+                    ) : (
+                        <>
+                            <Route
+                                path='/*'
+                                element={
+                                    <Login
+                                        setUserAuthenticatedState={
+                                            setUserAuthenticatedState
+                                        }
+                                        path={window.location.pathname}
+                                    />
+                                }
+                            />
+                        </>
+                    )}
+                </Routes>
+            </BrowserRouter>
+        </>
+    )
 }
 
 export default App

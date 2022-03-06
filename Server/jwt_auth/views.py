@@ -59,13 +59,15 @@ class LoginView(APIView):
         
 class VerifyEmail(APIView):
     def post(self, request):
-        print('test')
+        print(request.data)
         try:
             User.objects.get(email=request.data.get('email'))
+            print('email exists', True)
             return Response ({
             'emailExists': True,
             }, status=status.HTTP_200_OK)
         except User.DoesNotExist:
+            print('email exists', False)
             return Response ({
             'emailExists': False,
             }, status=status.HTTP_200_OK)
