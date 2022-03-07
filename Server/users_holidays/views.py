@@ -2,17 +2,19 @@ from django.db import IntegrityError
 from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework.response import Response
-from .serializers.common import HolidaySerializer
-from .models import Holiday # import Festival model
-
+from .serializers.common import UserHolidaySerializer
+from holidays.models import Holiday
 
 # Create your views here.
-class HolidayView(APIView):
+class UserHolidayView(APIView):
     def post(self, request):
-        request.data["created_by"] = request.data['userID']
-        serialized_data = HolidaySerializer(data=request.data, partial=True)
+        request.data["user_id"] = request.data['userID']
         print(request.data)
         try:
+            holiday = Holiday.objects.get(pk=request.data['holiday_id'])
+            print(holiday.created_by.id)
+            request.data['is_admin'] = holiday.created_by.id == request.data["user_id"]
+            serialized_data = UserHolidaySerializer(data=request.data, partial=True)
             serialized_data.is_valid()
             print(serialized_data.validated_data)
             serialized_data.save()

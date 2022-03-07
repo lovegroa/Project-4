@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import Login from './components/elements/Login'
 import Home from './components/pages/Home'
+import NewHoliday from './components/pages/NewHoliday'
 import { userAuthenticated } from './components/utils/UserAuthenticated'
 
 function App() {
@@ -14,7 +15,17 @@ function App() {
             <BrowserRouter>
                 <Routes>
                     {userAuthenticatedState ? (
-                        <Route path='/' element={<Home />} />
+                        <>
+                            <Route path='/' element={<Home />} />
+                            <Route
+                                path='/holiday/new'
+                                element={<NewHoliday />}
+                            />
+                            <Route
+                                path='/holiday/:holidayID'
+                                element={<NewHoliday />}
+                            />
+                        </>
                     ) : (
                         <>
                             <Route
