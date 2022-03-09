@@ -1,14 +1,16 @@
-from functools import partial
 from rest_framework.views import APIView
 from django.contrib.auth import get_user_model
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.exceptions import PermissionDenied, NotFound
+from users_holidays.serializers.populated import PopulatedUserHolidaySerializer
+
+from jwt_auth.serializers.populated import PopulatedUserSerializer
 from .serializers.common import UserSerializer
 from datetime import datetime, timedelta
 import jwt
 from django.conf import settings
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from rest_framework.permissions import IsAuthenticated
 from inspect import currentframe, getframeinfo
 
 
@@ -75,7 +77,7 @@ class VerifyEmail(APIView):
             raise Response(status=status.HTTP_400_BAD_REQUEST)
 
 class GetProfile(APIView):
-    permission_classes = (IsAuthenticatedOrReadOnly, )
+    permission_classes = (IsAuthenticated, )
 
     def get_profile(self, pk):
         try:
@@ -84,9 +86,10 @@ class GetProfile(APIView):
             raise NotFound(detail="User not found")
 
     def get(self, request):
-        print(request.data['userID'])
         profile = self.get_profile(pk=request.data['userID'])
-        serialized_user = UserSerializer(profile)
+        # serialized_user = UserSerializer(profile)
+        serialized_user = PopulatedUserSerializer(profile)
+        # serialized_user = PopulatedUserHolidaySerializer(PopulatedUserSerializer(profile))
         return Response(serialized_user.data, status=status.HTTP_200_OK)
 
     def put(self, request):

@@ -21,7 +21,6 @@ urlpatterns = [
     path('api/auth/', include('jwt_auth.urls')),
     path('api/holiday/', include('holidays.urls')),
     path('api/user_holiday/', include('users_holidays.urls')),
-
-
-    
+    path('api/dates/proposed/', include('dates_proposed.urls')),
+    path('api/dates/voted/', include('dates_voted.urls')),    
 ]

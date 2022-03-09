@@ -9,7 +9,8 @@ def id_generator(size=16, chars=string.ascii_uppercase + string.digits):
 class Holiday(models.Model):
     title = models.CharField(max_length=30, default=None)
     join_code = models.CharField(max_length=16, default=id_generator(), blank=True, null=True)
-    budget = models.IntegerField(default=None, blank=True, null=True) 
+    budget = models.IntegerField(default=None, blank=True, null=True)
+    budget_currency = models.CharField(max_length=1, blank=True, null=True)
     start_date = models.DateTimeField(default=None, blank=True, null=True)
     end_date = models.DateTimeField(default=None, blank=True, null=True)
     destination = models.CharField(default=None, max_length=30, blank=True, null=True)
@@ -19,7 +20,7 @@ class Holiday(models.Model):
         "jwt_auth.User",
         related_name="holidays",
         on_delete = models.CASCADE
-        
+
     )
 
 

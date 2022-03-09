@@ -40,6 +40,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'dates_voted',
+    'dates_proposed',
     'holidays',
     'users_holidays',
     'jwt_auth',
