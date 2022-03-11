@@ -1,8 +1,8 @@
 export const convertDate = (date) => {
 	const new_date = new Date(date)
 	const options = {
-		weekday: 'short',
-		year: 'numeric',
+		// weekday: 'short',
+		// year: '2-digit',
 		month: 'short',
 		day: 'numeric'
 	}

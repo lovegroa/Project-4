@@ -17,9 +17,9 @@ class UserHoliday(models.Model):
     )
     is_admin = models.BooleanField(default=False)
     joined_at = models.DateTimeField(auto_now_add=True)
-    dates_voted_confirmed = models.BooleanField(default=False)
     dates_confirmed = models.BooleanField(default=False)
     budget = models.IntegerField(default=None, blank=True, null=True)
+    dates_voted_confirmed = models.BooleanField(default=False)
 
 
 

@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import Login from './components/elements/Login'
 import Holiday from './components/pages/Holiday'
 import Home from './components/pages/Home'
+import Join from './components/pages/Join'
 import NewHoliday from './components/pages/NewHoliday'
 import { userAuthenticated } from './components/utils/UserAuthenticated'
 
@@ -30,6 +31,7 @@ function App() {
 								path='/user_holiday/:userHolidayID'
 								element={<Holiday />}
 							/>
+							<Route path='/join/:joinCode' element={<Join />} />
 						</>
 					) : (
 						<>

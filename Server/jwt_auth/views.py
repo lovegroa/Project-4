@@ -6,7 +6,7 @@ from rest_framework.exceptions import PermissionDenied, NotFound
 from users_holidays.serializers.populated import PopulatedUserHolidaySerializer
 
 from jwt_auth.serializers.populated import PopulatedUserSerializer
-from .serializers.common import UserSerializer
+from .serializers.common import UserSerializer, UserSerializer2
 from datetime import datetime, timedelta
 import jwt
 from django.conf import settings
@@ -21,11 +21,13 @@ User = get_user_model()
 class RegisterView(APIView):
     def post(self, request):
         request.data['username'] = request.data['email'] 
-        user_to_create = UserSerializer(data=request.data)
+        user_to_create = UserSerializer2(data=request.data)
 
         try:
             user_to_create.is_valid()
             user_to_create.save()
+            print('test')
+
             user_to_login = User.objects.get(email=request.data.get('email'))
             dt = datetime.now() + timedelta(days=7)
             token = jwt.encode({
@@ -86,6 +88,7 @@ class GetProfile(APIView):
             raise NotFound(detail="User not found")
 
     def get(self, request):
+        'test'
         profile = self.get_profile(pk=request.data['userID'])
         # serialized_user = UserSerializer(profile)
         serialized_user = PopulatedUserSerializer(profile)

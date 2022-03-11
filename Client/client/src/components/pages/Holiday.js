@@ -8,6 +8,7 @@ import { convertDate } from '../utils/Tools'
 const Holiday = () => {
 	const [formData, setFormData] = useState({})
 	const [userHolidayData, setUserHolidayData] = useState({ updated: false })
+	const [holidayData, setHolidayData] = useState({})
 	const { userHolidayID } = useParams()
 	const [loading, setLoading] = useState(false)
 	const [createStage, setCreateStage] = useState(0)
@@ -18,29 +19,45 @@ const Holiday = () => {
 		setFormData({ ...formData, [e.target.name]: e.target.value })
 	}
 
-	useEffect(() => {
-		const getUserHoliday = async () => {
-			setLoading(true)
-			try {
-				const headers = {
-					headers: {
-						Authorization: `Bearer ${getTokenFromLocalStorage()}`
-					}
+	const handleHolidayChange = (e) => {
+		setHolidayData({ ...holidayData, [e.target.name]: e.target.value })
+	}
+
+	const getUserHoliday = async () => {
+		setLoading(true)
+		try {
+			const headers = {
+				headers: {
+					Authorization: `Bearer ${getTokenFromLocalStorage()}`
 				}
-				const { data } = await axios.get(
-					`/api/user_holiday/${userHolidayID}/`,
-					headers
-				)
-				setUserHolidayData({ ...data, updated: true })
-				setErrorExists(false)
-				setLoading(false)
-			} catch (error) {
-				setErrorExists(true)
-				const { message } = error.response.data
-				console.log(message)
-				setLoading(false)
 			}
+			const { data } = await axios.get(
+				`/api/user_holiday/${userHolidayID}/`,
+				headers
+			)
+			setUserHolidayData({ ...data, updated: true })
+			// setHolidayData({
+			// 	holiday_id: userHolidayData.holiday_id.id
+			// })
+			setErrorExists(false)
+			setLoading(false)
+		} catch (error) {
+			setErrorExists(true)
+			const { message } = error.response.data
+			console.log(message)
+			setLoading(false)
 		}
+	}
+
+	useEffect(() => {
+		if (userHolidayData.updated) {
+			setHolidayData({
+				holiday_id: userHolidayData.holiday_id.id
+			})
+		}
+	}, [userHolidayData])
+
+	useEffect(() => {
 		getUserHoliday()
 	}, [userHolidayID])
 
@@ -50,15 +67,19 @@ const Holiday = () => {
 			if (userHolidayData.updated) {
 				const { holiday_id } = userHolidayData
 
-				if (!holiday_id.budget && userHolidayData.budget === -1)
-					return 0 //if no budget has been set the user needs to provide their budget
+				if (!holiday_id.budget && !userHolidayData.budget) return 0 //if no budget has been set the user needs to provide their budget
 				if (!holiday_id.start_date) {
-					if (!userHolidayData.dates_voted_confirmed) return 1 // user needs to select what dates work for them out of the list
-					if (userHolidayData.is_admin) return 2 //admin needs to confirm these dates
 					return 1
 				}
+				if (!holiday_id.budget) {
+					if (userHolidayData.is_admin) {
+						return 2
+					}
+					return 100
+				}
+
 				if (!userHolidayData.dates_confirmed) return 3 // user needs to confirm that they definitely can make these dates, e.g. have booked time off and also that they are happy with the budget
-				return 4
+				return 100
 			}
 		}
 		setCreateStage(identifyStage())
@@ -87,6 +108,112 @@ const Holiday = () => {
 			const { message } = error.response.data
 			console.log(message)
 		}
+	}
+
+	const updateHoliday = async (e) => {
+		e.preventDefault()
+		setLoading(true)
+		try {
+			const headers = {
+				headers: {
+					Authorization: `Bearer ${getTokenFromLocalStorage()}`
+				}
+			}
+			await axios.put('/api/holiday/', holidayData, headers)
+			getUserHoliday()
+			setLoading(false)
+			setErrorExists(false)
+		} catch (error) {
+			setErrorExists(true)
+			setLoading(false)
+			const { message } = error.response.data
+			console.log(message)
+		}
+	}
+
+	const voteOnDate = async (voteData) => {
+		setLoading(true)
+		try {
+			const headers = {
+				headers: {
+					Authorization: `Bearer ${getTokenFromLocalStorage()}`
+				}
+			}
+			await axios.post(`/api/dates/voted/`, voteData, headers)
+
+			getUserHoliday()
+			setLoading(false)
+			setErrorExists(false)
+		} catch (error) {
+			setErrorExists(true)
+			setLoading(false)
+			const { message } = error.response.data
+			console.log(message)
+		}
+	}
+
+	const updateVoteOnDate = async (voteData) => {
+		setLoading(true)
+		try {
+			const headers = {
+				headers: {
+					Authorization: `Bearer ${getTokenFromLocalStorage()}`
+				}
+			}
+			await axios.put(`/api/dates/voted/`, voteData, headers)
+
+			getUserHoliday()
+			setLoading(false)
+			setErrorExists(false)
+		} catch (error) {
+			setErrorExists(true)
+			setLoading(false)
+			const { message } = error.response.data
+			console.log(message)
+		}
+	}
+
+	const upVoteDateNew = (e) => {
+		e.preventDefault()
+		voteOnDate({
+			date_proposed_id: e.target.value,
+			date_confirmed: true
+		})
+
+		console.log(e.target.value)
+	}
+
+	const upVoteDateUpdate = (e) => {
+		e.preventDefault()
+		updateVoteOnDate({
+			date_voted_id: e.target.value,
+			date_confirmed: true
+		})
+		console.log(e.target.value)
+	}
+
+	const downVoteDateNew = (e) => {
+		e.preventDefault()
+		voteOnDate({
+			date_proposed_id: e.target.value,
+			date_confirmed: false
+		})
+		console.log(e.target.value)
+	}
+
+	const downVoteDateUpdate = (e) => {
+		e.preventDefault()
+		updateVoteOnDate({
+			date_voted_id: e.target.value,
+			date_confirmed: false
+		})
+		console.log(e.target.value)
+	}
+
+	const confirmDatesAndBudget = (e) => {
+		console.log('test')
+		setFormData({ ...formData, dates_confirmed: true })
+		updateUserHoliday(e)
 	}
 
 	// const updateStage = (e) => {
@@ -128,26 +255,366 @@ const Holiday = () => {
 							Out of the dates below please confirm which work for
 							you
 						</p>
-						{userHolidayData.holiday_id.dates_proposed.map(
-							(date_proposed) => {
-								return (
-									<p key={date_proposed.id}>
-										{`${convertDate(
-											date_proposed.start_date
-										)} - ${convertDate(
-											date_proposed.end_date
-										)}`}
-									</p>
-								)
-							}
+						<table>
+							<thead>
+								<tr>
+									<th>Start Date</th>
+									<th>End Date</th>
+									<th>👍</th>
+									<th>👎</th>
+								</tr>
+							</thead>
+							<tbody>
+								{userHolidayData.holiday_id.dates_proposed.map(
+									(date_proposed) => {
+										let upVoteCount = 0
+										let downVoteCount = 0
+										let myVote = 0
+										let myVoteId
+
+										date_proposed.dates_voted.map(
+											(vote) => {
+												if (
+													vote.user_id.id ===
+														userHolidayData.user_id &&
+													vote.date_confirmed
+												) {
+													myVote += 1
+													myVoteId = vote.id
+												}
+												if (
+													vote.user_id.id ===
+														userHolidayData.user_id &&
+													!vote.date_confirmed
+												) {
+													myVote -= 1
+													myVoteId = vote.id
+												}
+
+												vote.date_confirmed
+													? (upVoteCount += 1)
+													: (downVoteCount += 1)
+
+												return ''
+											}
+										)
+
+										return (
+											<tr key={date_proposed.id}>
+												<td>
+													{convertDate(
+														date_proposed.start_date
+													)}
+												</td>
+												<td>
+													{convertDate(
+														date_proposed.end_date
+													)}
+												</td>
+												<td>{upVoteCount}</td>
+												<td>{downVoteCount}</td>
+
+												{!myVote ? (
+													<>
+														<td>
+															<button
+																onClick={
+																	upVoteDateNew
+																}
+																value={
+																	date_proposed.id
+																}
+																className='none'
+															>
+																👍
+															</button>
+														</td>
+														<td>
+															<button
+																onClick={
+																	downVoteDateNew
+																}
+																value={
+																	date_proposed.id
+																}
+																className='none'
+															>
+																👎
+															</button>
+														</td>
+													</>
+												) : (
+													<>
+														<td>
+															<button
+																onClick={
+																	upVoteDateUpdate
+																}
+																value={
+																	myVoteId
+
+																	// date_proposed.id
+																}
+																style={
+																	myVote === 1
+																		? {
+																				background:
+																					'green'
+																		  }
+																		: {}
+																}
+																className='none'
+															>
+																👍
+															</button>
+														</td>
+														<td>
+															<button
+																onClick={
+																	downVoteDateUpdate
+																}
+																value={
+																	myVoteId
+
+																	// date_proposed.id
+																}
+																style={
+																	myVote ===
+																	-1
+																		? {
+																				// border: 'solid 1px black',
+																				background:
+																					'red'
+																		  }
+																		: {}
+																}
+																className='none'
+															>
+																👎
+															</button>
+														</td>
+													</>
+												)}
+											</tr>
+										)
+									}
+								)}
+							</tbody>
+						</table>
+
+						{userHolidayData.is_admin ? (
+							<>
+								<h3>Confirm dates</h3>
+								<form>
+									<input
+										onChange={handleHolidayChange}
+										name={'start_date'}
+										type={'date'}
+										className='login-text-input'
+									></input>
+									<input
+										onChange={handleHolidayChange}
+										name={'end_date'}
+										type={'date'}
+										className='login-text-input'
+									></input>
+								</form>
+								<button onClick={updateHoliday} type='submit'>
+									Confirm
+								</button>
+							</>
+						) : (
+							''
 						)}
+					</>
+				)
+			case 2:
+				return (
+					<>
+						{userHolidayData.updated ? (
+							<>
+								<table>
+									<thead>
+										<tr>
+											<th> Group Member</th>
+											<th> Budget</th>
+										</tr>
+									</thead>
+									<tbody>
+										{userHolidayData.holiday_id.user_holidays.map(
+											(user_holiday) => {
+												return (
+													<>
+														<tr>
+															<td>
+																{
+																	user_holiday
+																		.user_id
+																		.first_name
+																}{' '}
+																{
+																	user_holiday
+																		.user_id
+																		.last_name
+																}
+															</td>
+															<td>
+																{
+																	userHolidayData
+																		.holiday_id
+																		.budget_currency
+																}
+																{
+																	user_holiday.budget
+																}
+															</td>
+														</tr>
+													</>
+												)
+											}
+										)}
+									</tbody>
+								</table>
+							</>
+						) : (
+							''
+						)}
+
+						<p>Confirm budget</p>
+						<form>
+							<select
+								name='budget_currency'
+								onChange={handleHolidayChange}
+							>
+								<option value='£'>£</option>
+								<option value='$'>$</option>
+								<option value='€'>€</option>
+							</select>
+							<input
+								onChange={handleHolidayChange}
+								name={'budget'}
+								placeholder={'e.g. 500'}
+								type={'number'}
+								className='login-text-input'
+							></input>
+						</form>
+						<button onClick={updateHoliday}>Confirm</button>
+					</>
+				)
+
+			case 3:
+				return (
+					<>
+						<h2>All steam ahead!</h2>
+						<p>
+							these are the final dates and budget for your trip
+							<br />
+							now is the time to book time off!
+						</p>
+						<h4>Confirmed Dates</h4>
+						{userHolidayData.updated ? (
+							<>
+								{convertDate(
+									userHolidayData.holiday_id.start_date
+								)}{' '}
+								{' - '}{' '}
+								{convertDate(
+									userHolidayData.holiday_id.end_date
+								)}
+							</>
+						) : (
+							''
+						)}{' '}
+						<h4>Confirmed Budget</h4>
+						<p>
+							{userHolidayData.holiday_id.budget_currency}
+							{userHolidayData.holiday_id.budget}
+						</p>
+						<h3>
+							I'm 100% happy with these dates and this budget!
+						</h3>
+						<button onClick={confirmDatesAndBudget}>Confirm</button>
+					</>
+				)
+
+			case 4:
+				return (
+					<>
+						{userHolidayData ? (
+							<>
+								<table>
+									<thead>
+										<tr>
+											<th> Group Member</th>
+											<th> Budget</th>
+										</tr>
+									</thead>
+									<tbody>
+										{userHolidayData.holiday_id.user_holidays.map(
+											(user_holiday) => {
+												return (
+													<>
+														<tr>
+															<td>
+																{
+																	user_holiday
+																		.user_id
+																		.first_name
+																}{' '}
+																{
+																	user_holiday
+																		.user_id
+																		.last_name
+																}
+															</td>
+															<td>
+																{
+																	userHolidayData
+																		.holiday_id
+																		.budget_currency
+																}
+																{
+																	user_holiday.budget
+																}
+															</td>
+														</tr>
+													</>
+												)
+											}
+										)}
+									</tbody>
+								</table>
+							</>
+						) : (
+							''
+						)}
+
+						<p>Confirm budget</p>
+						<form>
+							<select
+								name='budget_currency'
+								onChange={handleHolidayChange}
+							>
+								<option value='£'>£</option>
+								<option value='$'>$</option>
+								<option value='€'>€</option>
+							</select>
+							<input
+								onChange={handleHolidayChange}
+								name={'budget'}
+								placeholder={'e.g. 500'}
+								type={'number'}
+								className='login-text-input'
+							></input>
+						</form>
+						<button onClick={confirmDatesAndBudget}>Confirm</button>
 					</>
 				)
 
 			default:
 				return (
 					<>
-						<p>stage not yet created</p>
+						<p>Waiting on admin</p>
 					</>
 				)
 		}
@@ -157,7 +624,12 @@ const Holiday = () => {
 		<>
 			<Header />
 			<main>
-				<h1>{userHolidayData.id}</h1>
+				<h1>
+					{userHolidayData.updated
+						? userHolidayData.holiday_id.title
+						: ''}
+				</h1>
+
 				{!loading ? (
 					<>
 						{errorExists && (

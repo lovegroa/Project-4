@@ -1,32 +1,54 @@
 button {
-    margin: 15px;
-    padding: 0 15px;
-    height: 50px;
-    width: max-content;
-    font-size: 22px;
-    border: none;
-    color: white;
-    border-radius: 1000px;
-    transition: 3s;
-    // text-transform: uppercase;
-    font-weight: 700;
-    color: black;
-    background: $colour-1;
-    background: linear-gradient(
-        90deg,
-        rgba(129, 230, 217, 1) 0%,
-        rgba(79, 209, 197, 1) 100%
-    );
-    box-shadow: 12px 12px 24px rgba(79, 209, 197, 0.64);
-    transition: all 0.3s ease-in-out 0s;
-    cursor: pointer;
-    outline: none;
-    letter-spacing: 1.3px;
+	margin: 15px;
+	padding: 0 15px;
+	height: 50px;
+	width: max-content;
+	font-size: 22px;
+	border: none;
+	color: white;
+	border-radius: 1000px;
+	transition: 3s;
+	// text-transform: uppercase;
+	font-weight: 700;
+	color: black;
+	background: $colour-1;
+	background: linear-gradient(
+		90deg,
+		rgba(129, 230, 217, 1) 0%,
+		rgba(79, 209, 197, 1) 100%
+	);
+	box-shadow: 12px 12px 24px rgba(79, 209, 197, 0.64);
+	transition: all 0.3s ease-in-out 0s;
+	cursor: pointer;
+	outline: none;
+	letter-spacing: 1.3px;
 }
 
 button:hover,
 button:focus {
-    background-color: darken($colour-1, 10%);
-    color: white;
-    font-size: 16px;
+	background-color: darken($colour-1, 10%);
+	color: white;
+	font-size: 16px;
+}
+
+.none {
+	display: inline;
+	margin: auto;
+	padding: auto;
+	height: auto;
+	width: fit-content;
+	font-size: auto;
+	border: none;
+	color: auto;
+	border-radius: auto;
+	transition: auto;
+	// text-transform: uppercase;
+	font-weight: auto;
+	color: auto;
+	background: white;
+	box-shadow: none;
+	transition: auto;
+	cursor: pointer;
+	outline: none;
+	letter-spacing: auto;
 }

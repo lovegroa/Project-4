@@ -36,8 +36,6 @@ const Home = () => {
 			<Header />
 			<main>
 				<br />
-
-				<button>Join a holiday</button>
 				<button onClick={NewHoliday}>New holiday</button>
 				<h2>Holidays</h2>
 				{!!profileData.user_holidays &&

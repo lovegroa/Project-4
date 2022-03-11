@@ -12,37 +12,8 @@ from rest_framework.permissions import IsAuthenticated
 
 class HolidayView(APIView):
     permission_classes = (IsAuthenticated,)
-    def post(self, request):
-        request.data["created_by"] = request.data['userID']
-        # request.data.pop('budget_currency')
-        print(request.data)
-        serialized_data = HolidaySerializer(data=request.data, partial=True)
-        try:
-            # this first part adds the holiday to the holiday database
-            serialized_data.is_valid()
-            serialized_data.save()
 
-            # this second part adds the user holiday relationship to the user holiday database
-            user_holiday_data = {
-                'holiday_id': serialized_data.data['id'],
-                'user_id': request.data['userID'],
-                'is_admin': True,
-                'budget':-1
-            }
-            serialized_data2 = UserHolidaySerializer(data=user_holiday_data, partial=True)
-            serialized_data2.is_valid()
-            serialized_data2.save()
-            print('it saved')
-            return Response(serialized_data.data, status=status.HTTP_201_CREATED)
-        except IntegrityError as e:
-            return Response({ "detail": str(e) }, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
-        except AssertionError as e:
-            return Response({ "detail": str(e) }, status=status.HTTP_422_UNPROCESSABLE_ENTITY)            
-        except:
-            return Response(
-                { "detail": "Unprocessable Entity" },
-                status=status.HTTP_422_UNPROCESSABLE_ENTITY
-            )
+
     def get_holiday(self, pk):
         try:
             return Holiday.objects.get(pk=pk)
@@ -59,6 +30,39 @@ class HolidayView(APIView):
         holiday = self.get_holiday(pk=pk)
         serialized_holiday = PopulatedHolidaySerializer(holiday)
         return Response(serialized_holiday.data, status=status.HTTP_200_OK)
+
+    def post(self, request):
+        request.data["created_by"] = request.data['userID']
+        print(request.data)
+        serialized_data = HolidaySerializer(data=request.data, partial=True)
+        try:
+            # this first part adds the holiday to the holiday database
+            serialized_data.is_valid()
+            serialized_data.save()
+            print('it saved the holiday')
+
+            # this second part adds the user holiday relationship to the user holiday database
+            user_holiday_data = {
+                'holiday_id': serialized_data.data['id'],
+                'user_id': request.data['userID'],
+                'is_admin': True,
+                # 'budget':-1
+            }
+            print(user_holiday_data)
+            serialized_data2 = UserHolidaySerializer(data=user_holiday_data, partial=True)
+            serialized_data2.is_valid()
+            serialized_data2.save()
+            print('it saved the user holiday')
+            return Response(serialized_data.data, status=status.HTTP_201_CREATED)
+        except IntegrityError as e:
+            return Response({ "detail": str(e) }, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+        except AssertionError as e:
+            return Response({ "detail": str(e) }, status=status.HTTP_422_UNPROCESSABLE_ENTITY)            
+        except:
+            return Response(
+                { "detail": "Unprocessable Entity" },
+                status=status.HTTP_422_UNPROCESSABLE_ENTITY
+            )
 
     def put(self, request):
         holiday_to_update = self.get_holiday(pk=request.data['holiday_id'])
