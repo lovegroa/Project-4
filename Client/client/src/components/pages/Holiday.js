@@ -4,6 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import Header from '../elements/Header'
 import { getTokenFromLocalStorage } from '../utils/UserAuthenticated'
 import { convertDate } from '../utils/Tools'
+import DestinationsProposed from '../elements/DestinationsProposed'
 
 const Holiday = () => {
 	const [formData, setFormData] = useState({})
@@ -63,7 +64,7 @@ const Holiday = () => {
 
 	useEffect(() => {
 		const identifyStage = () => {
-			console.log(userHolidayData)
+			// console.log(userHolidayData)
 			if (userHolidayData.updated) {
 				const { holiday_id } = userHolidayData
 
@@ -79,7 +80,30 @@ const Holiday = () => {
 				}
 
 				if (!userHolidayData.dates_confirmed) return 3 // user needs to confirm that they definitely can make these dates, e.g. have booked time off and also that they are happy with the budget
-				return 100
+
+				let allUsersHaveConfirmed = true
+
+				userHolidayData.holiday_id.user_holidays.forEach(
+					(user_holiday) => {
+						if (!user_holiday.dates_confirmed)
+							allUsersHaveConfirmed = false
+					}
+				)
+
+				if (!allUsersHaveConfirmed) {
+					//only allows users to pass once everyone has booked time off
+					if (userHolidayData.is_admin) {
+						//admin can see a table of who has / has not confirmed
+						return 4
+					}
+					return 100
+				}
+
+				if (!userHolidayData.holiday_id.destination) {
+					return 5
+				}
+
+				return 5
 			}
 		}
 		setCreateStage(identifyStage())
@@ -88,6 +112,7 @@ const Holiday = () => {
 	const updateUserHoliday = async (e) => {
 		e.preventDefault()
 		setLoading(true)
+		console.log('formData', formData)
 		try {
 			const headers = {
 				headers: {
@@ -211,8 +236,9 @@ const Holiday = () => {
 	}
 
 	const confirmDatesAndBudget = (e) => {
+		handleChange(e)
 		console.log('test')
-		setFormData({ ...formData, dates_confirmed: true })
+		// setFormData({ ...formData, dates_confirmed: true })
 		updateUserHoliday(e)
 	}
 
@@ -445,7 +471,11 @@ const Holiday = () => {
 											(user_holiday) => {
 												return (
 													<>
-														<tr>
+														<tr
+															key={
+																user_holiday.id
+															}
+														>
 															<td>
 																{
 																	user_holiday
@@ -533,7 +563,13 @@ const Holiday = () => {
 						<h3>
 							I'm 100% happy with these dates and this budget!
 						</h3>
-						<button onClick={confirmDatesAndBudget}>Confirm</button>
+						<button
+							name={'dates_confirmed'}
+							value={true}
+							onClick={confirmDatesAndBudget}
+						>
+							Confirm
+						</button>
 					</>
 				)
 
@@ -546,7 +582,7 @@ const Holiday = () => {
 									<thead>
 										<tr>
 											<th> Group Member</th>
-											<th> Budget</th>
+											<th> Confirmed</th>
 										</tr>
 									</thead>
 									<tbody>
@@ -554,7 +590,11 @@ const Holiday = () => {
 											(user_holiday) => {
 												return (
 													<>
-														<tr>
+														<tr
+															key={
+																user_holiday.id
+															}
+														>
 															<td>
 																{
 																	user_holiday
@@ -568,14 +608,9 @@ const Holiday = () => {
 																}
 															</td>
 															<td>
-																{
-																	userHolidayData
-																		.holiday_id
-																		.budget_currency
-																}
-																{
-																	user_holiday.budget
-																}
+																{user_holiday.dates_confirmed
+																	? 'True'
+																	: 'Not yet'}
 															</td>
 														</tr>
 													</>
@@ -588,29 +623,17 @@ const Holiday = () => {
 						) : (
 							''
 						)}
-
-						<p>Confirm budget</p>
-						<form>
-							<select
-								name='budget_currency'
-								onChange={handleHolidayChange}
-							>
-								<option value='£'>£</option>
-								<option value='$'>$</option>
-								<option value='€'>€</option>
-							</select>
-							<input
-								onChange={handleHolidayChange}
-								name={'budget'}
-								placeholder={'e.g. 500'}
-								type={'number'}
-								className='login-text-input'
-							></input>
-						</form>
-						<button onClick={confirmDatesAndBudget}>Confirm</button>
 					</>
 				)
 
+			case 5:
+				return (
+					<>
+						<DestinationsProposed
+							userHolidayData={userHolidayData}
+						/>
+					</>
+				)
 			default:
 				return (
 					<>
